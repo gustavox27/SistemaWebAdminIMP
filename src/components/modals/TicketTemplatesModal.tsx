@@ -113,6 +113,7 @@ export default function TicketTemplatesModal({ isOpen, onClose, onSelect }: Tick
 
   const handleTemplateSelect = (template: TicketTemplate) => {
     onSelect(template);
+    onClose();
   };
 
   const resetForm = () => {

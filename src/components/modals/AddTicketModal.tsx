@@ -10,7 +10,7 @@ import PrinterSelectionModal from './PrinterSelectionModal';
 import TicketTemplatesModal from './TicketTemplatesModal';
 
 interface AddTicketModalProps {
-  isOpen: boolean;
+  isOpen: boolean | Ticket;
   onClose: () => void;
 }
 
@@ -20,10 +20,14 @@ export default function AddTicketModal({ isOpen, onClose }: AddTicketModalProps)
   const [showUserModal, setShowUserModal] = useState(false);
   const [showPrinterModal, setShowPrinterModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+
+  // Determinar si es duplicación de ticket
+  const ticketToDuplicate = typeof isOpen === 'object' ? isOpen : null;
+
   const [formData, setFormData] = useState({
-    userName: '',
-    printerId: '',
-    area: '',
+    userName: ticketToDuplicate?.userName || '',
+    printerId: ticketToDuplicate?.printerId || '',
+    area: ticketToDuplicate?.area || '',
     assistanceTitle: '',
     assistanceDetail: '',
     isServiceRequest: false,
@@ -150,7 +154,7 @@ export default function AddTicketModal({ isOpen, onClose }: AddTicketModalProps)
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {(isOpen === true || ticketToDuplicate) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0 }}

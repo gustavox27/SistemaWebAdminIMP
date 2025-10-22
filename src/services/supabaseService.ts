@@ -90,7 +90,8 @@ const fieldMapping: Record<string, Record<string, string>> = {
     'printerIp': 'printer_ip',
     'isBackup': 'is_backup',
     'motorCyclePending': 'motor_cycle_pending',
-    'createdAt': 'created_at'
+    'createdAt': 'created_at',
+    'updatedAt': 'updated_at'
   },
   'toner_loans': {
     'inventoryId': 'inventory_id',
@@ -165,6 +166,9 @@ const fieldMapping: Record<string, Record<string, string>> = {
     'assistanceDetail': 'assistance_detail',
     'isServiceRequest': 'is_service_request',
     'isIncident': 'is_incident',
+    'copiedAt': 'copied_at',
+    'movedToHistory': 'moved_to_history',
+    'historyMoveDate': 'history_move_date',
     'createdAt': 'created_at',
     'updatedAt': 'updated_at'
   },
@@ -236,14 +240,33 @@ export class SupabaseService {
   async getAll<T>(storeName: string): Promise<T[]> {
     try {
       const tableName = tableMapping[storeName] || storeName;
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      const ITEMS_PER_PAGE = 1000;
+      let allData: any[] = [];
+      let page = 0;
+      let hasMore = true;
 
-      return data ? data.map(item => convertToCamelCase(storeName, item) as T) : [];
+      while (hasMore) {
+        const from = page * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+
+        const { data, error, count } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allData = allData.concat(data);
+        }
+
+        hasMore = data && data.length === ITEMS_PER_PAGE;
+        page++;
+      }
+
+      return allData.map(item => convertToCamelCase(storeName, item) as T);
     } catch (error) {
       console.error(`Error getting all ${storeName}:`, error);
       throw error;
@@ -275,11 +298,25 @@ export class SupabaseService {
       const tableName = tableMapping[storeName] || storeName;
       const convertedDataArray = dataArray.map(data => convertToSnakeCase(storeName, data));
 
-      const { error } = await supabase
-        .from(tableName)
-        .insert(convertedDataArray);
+      const MAX_BATCH_SIZE = 1000;
 
-      if (error) throw error;
+      if (convertedDataArray.length <= MAX_BATCH_SIZE) {
+        const { error } = await supabase
+          .from(tableName)
+          .insert(convertedDataArray);
+
+        if (error) throw error;
+      } else {
+        for (let i = 0; i < convertedDataArray.length; i += MAX_BATCH_SIZE) {
+          const chunk = convertedDataArray.slice(i, i + MAX_BATCH_SIZE);
+
+          const { error } = await supabase
+            .from(tableName)
+            .insert(chunk);
+
+          if (error) throw error;
+        }
+      }
     } catch (error) {
       console.error(`Error adding batch to ${storeName}:`, error);
       throw error;
@@ -332,6 +369,49 @@ export class SupabaseService {
       if (error) throw error;
     } catch (error) {
       console.error(`Error clearing ${storeName}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteBatch(storeName: string, ids: string[]): Promise<void> {
+    try {
+      if (!ids || ids.length === 0) {
+        return;
+      }
+
+      const tableName = tableMapping[storeName] || storeName;
+
+      const BATCH_SIZE = 500;
+
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const batch = ids.slice(i, i + BATCH_SIZE);
+
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .in('id', batch);
+
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error(`Error deleting batch from ${storeName}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteByCondition(storeName: string, column: string, value: any): Promise<void> {
+    try {
+      const tableName = tableMapping[storeName] || storeName;
+      const snakeColumn = fieldMapping[tableName]?.[column] || column;
+
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .neq(snakeColumn, value);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error(`Error deleting by condition from ${storeName}:`, error);
       throw error;
     }
   }

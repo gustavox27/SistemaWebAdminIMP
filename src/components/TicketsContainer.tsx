@@ -54,7 +54,7 @@ export default function TicketsContainer() {
           const copiedAt = (ticket as any).copiedAt;
           if (copiedAt) {
             const hoursSinceCopy = differenceInHours(now, new Date(copiedAt));
-            if (hoursSinceCopy >= 1) {
+            if (hoursSinceCopy >= 20) {
               ticketsToUpdate.push({
                 id: ticketId,
                 ticket: {

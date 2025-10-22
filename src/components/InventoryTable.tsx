@@ -60,15 +60,20 @@ export default function InventoryTable() {
   // Datos para el dashboard
   const totalSupplies = inventory.reduce((sum, item) => sum + item.quantity, 0);
   
-  // Agrupar por modelo de toner
-  const suppliesByModel = inventory.reduce((acc, item) => {
-    if (acc[item.tonerModel]) {
-      acc[item.tonerModel] += item.quantity;
-    } else {
-      acc[item.tonerModel] = item.quantity;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  // Agrupar por modelo de toner - suma correcta de cantidades
+  const suppliesByModel = useMemo(() => {
+    return inventory.reduce((acc, item) => {
+      const model = item.tonerModel.trim();
+      if (!model) return acc;
+
+      if (acc[model]) {
+        acc[model] += item.quantity;
+      } else {
+        acc[model] = item.quantity;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+  }, [inventory]);
 
   // Calcular métricas del dashboard
   const uniqueModels = Object.keys(suppliesByModel).length;
@@ -126,34 +131,89 @@ export default function InventoryTable() {
           </div>
         </div>
 
-        {/* Cantidad por Modelo */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Package size={20} className="mr-2 text-green-600" />
-            Cantidad por Modelo
-          </h3>
-          <div className="space-y-3 max-h-32 overflow-y-auto">
+        {/* Inventario por Modelo - Diseño Compacto con Iconos Flotantes */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg shadow-sm border border-green-200 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-green-200 opacity-20 rounded-full -mr-16 -mt-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-200 opacity-20 rounded-full -ml-12 -mb-12"></div>
+
+          <div className="relative z-10">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="bg-green-600 p-2 rounded-lg mr-2 shadow-md">
+                <Package size={18} className="text-white" />
+              </div>
+              Inventario por Modelo
+            </h3>
+
             {topModels.length > 0 ? (
-              topModels.map(([model, quantity]) => (
-                <div key={model} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-gray-900 truncate">{model}</span>
-                      <span className="text-sm font-semibold text-green-600">{quantity}</span>
+              <div className="grid grid-cols-5 gap-2">
+                {topModels.map(([model, quantity], index) => {
+                  const colorClasses =
+                    quantity <= 2 ? 'from-red-500 to-red-600' :
+                    quantity <= 5 ? 'from-yellow-500 to-orange-500' :
+                    'from-green-500 to-emerald-600';
+
+                  const textColorClasses =
+                    quantity <= 2 ? 'text-red-600' :
+                    quantity <= 5 ? 'text-yellow-600' :
+                    'text-green-600';
+
+                  const bgColorClasses =
+                    quantity <= 2 ? 'bg-red-50 hover:bg-red-100 border-red-200' :
+                    quantity <= 5 ? 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200' :
+                    'bg-green-50 hover:bg-green-100 border-green-200';
+
+                  return (
+                    <div
+                      key={model}
+                      className={`${bgColorClasses} border-2 rounded-xl p-3 transition-all duration-300 hover:shadow-lg hover:scale-105 cursor-pointer group relative`}
+                      title={model}
+                    >
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <div className={`bg-gradient-to-br ${colorClasses} p-3 rounded-full shadow-md group-hover:shadow-xl transition-shadow`}>
+                          <Package size={20} className="text-white" />
+                        </div>
+                        <div className="text-center">
+                          <div className={`text-2xl font-bold ${textColorClasses}`}>
+                            {quantity}
+                          </div>
+                          <div className="text-xs text-gray-600 font-medium truncate max-w-full">
+                            {model.length > 12 ? `${model.substring(0, 12)}...` : model}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="absolute -top-1 -right-1 bg-gray-900 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                        {index + 1}
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(quantity / maxQuantity) * 100}%` }}
-                      />
-                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="bg-white bg-opacity-60 p-4 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                  <Package className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-600 font-medium">Sin modelos en inventario</p>
+              </div>
+            )}
+
+            {topModels.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-green-200">
+                <div className="flex items-center justify-center gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full"></div>
+                    <span className="text-gray-600">Stock Normal</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full"></div>
+                    <span className="text-gray-600">Stock Bajo</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-gradient-to-br from-red-500 to-red-600 rounded-full"></div>
+                    <span className="text-gray-600">Crítico</span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-4">
-                <Package className="mx-auto h-8 w-8 text-gray-400" />
-                <p className="text-sm text-gray-500 mt-2">Sin modelos disponibles</p>
               </div>
             )}
           </div>

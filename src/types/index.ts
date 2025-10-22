@@ -203,6 +203,9 @@ export interface Ticket {
   assistanceDetail: string;
   isServiceRequest: boolean;
   isIncident: boolean;
+  copiedAt?: Date;
+  movedToHistory?: boolean;
+  historyMoveDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

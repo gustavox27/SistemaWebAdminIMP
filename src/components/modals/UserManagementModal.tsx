@@ -312,30 +312,26 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
   }, [userToDelete, deleteUser]);
 
   const handleDeleteAll = useCallback(async () => {
+    const toastId = toast.loading('Eliminando usuarios...');
     try {
-      // Eliminar todos los usuarios excepto el predeterminado
       const usersToDelete = users.filter(u => u.name !== 'Freddy Moscoso');
-      
-      // Procesar en lotes para evitar bloqueo
-      const batchSize = 50;
-      for (let i = 0; i < usersToDelete.length; i += batchSize) {
-        const batch = usersToDelete.slice(i, i + batchSize);
-        await Promise.all(batch.map(async (user) => {
-          await supabaseService.delete('users', user.id);
-          deleteUser(user.id);
-        }));
-        
-        // Pequeña pausa para permitir que la UI responda
-        if (i + batchSize < usersToDelete.length) {
-          await new Promise(resolve => setTimeout(resolve, 10));
-        }
+      const idsToDelete = usersToDelete.map(u => u.id);
+
+      if (idsToDelete.length === 0) {
+        toast.error('No hay usuarios para eliminar', { id: toastId });
+        return;
       }
-      
-      toast.success(`${usersToDelete.length} usuario(s) eliminado(s). Se mantuvo el usuario predeterminado.`);
+
+      await supabaseService.deleteBatch('users', idsToDelete);
+
+      usersToDelete.forEach(user => deleteUser(user.id));
+
+      toast.success(`${usersToDelete.length} usuario(s) eliminado(s) exitosamente`, { id: toastId });
       setShowDeleteAllDialog(false);
       setConfirmationText('');
     } catch (error) {
-      toast.error('Error al eliminar los usuarios');
+      console.error('Error al eliminar usuarios:', error);
+      toast.error('Error al eliminar los usuarios', { id: toastId });
     }
   }, [users, deleteUser]);
 
@@ -422,53 +418,118 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
   }, []);
 
   const processExcelImport = useCallback(async () => {
+    setIsProcessingExcel(true);
+    const toastId = toast.loading('Importando usuarios...');
+
     try {
-      let addedCount = 0;
+      const newUsers: UserType[] = [];
       let skippedCount = 0;
 
-      // Procesar en lotes para evitar bloqueo de la UI
-      const batchSize = 100;
-      for (let i = 0; i < excelData.length; i += batchSize) {
-        const batch = excelData.slice(i, i + batchSize);
-        
-        for (const excelUser of batch) {
-          // Verificar si ya existe
-          const existingUser = users.find(u => 
-            (u as any).usuarioWindows === excelUser.usuario_windows
-          );
+      for (const excelUser of excelData) {
+        const existingUser = users.find(u =>
+          (u as any).usuarioWindows === excelUser.usuario_windows
+        );
 
-          if (existingUser) {
-            skippedCount++;
-            continue;
-          }
-
-          const newUser: UserType = {
-            id: crypto.randomUUID(),
-            name: excelUser.nombre,
-            contact: '',
-            position: 'Usuario',
-            empresa: excelUser.empresa,
-            usuarioWindows: excelUser.usuario_windows
-          } as UserType;
-
-          addUser(newUser);
-          await supabaseService.add('users', newUser);
-          addedCount++;
+        if (existingUser) {
+          skippedCount++;
+          continue;
         }
 
-        // Pequeña pausa entre lotes para permitir que la UI responda
-        if (i + batchSize < excelData.length) {
-          await new Promise(resolve => setTimeout(resolve, 10));
-        }
+        const newUser: UserType = {
+          id: crypto.randomUUID(),
+          name: excelUser.nombre,
+          contact: '',
+          position: 'Usuario',
+          empresa: excelUser.empresa,
+          usuarioWindows: excelUser.usuario_windows
+        } as UserType;
+
+        newUsers.push(newUser);
       }
 
-      toast.success(`${addedCount} usuarios importados. ${skippedCount} omitidos (duplicados)`);
+      if (newUsers.length === 0) {
+        toast.error('No hay usuarios nuevos para importar', { id: toastId });
+        setIsProcessingExcel(false);
+        return;
+      }
+
+      const BATCH_SIZE = 500;
+      let processedCount = 0;
+
+      for (let i = 0; i < newUsers.length; i += BATCH_SIZE) {
+        const batch = newUsers.slice(i, i + BATCH_SIZE);
+
+        await supabaseService.addBatch('users', batch);
+
+        batch.forEach(user => addUser(user));
+
+        processedCount += batch.length;
+        toast.loading(`Importando usuarios: ${processedCount}/${newUsers.length}`, { id: toastId });
+      }
+
+      toast.success(
+        `✓ ${newUsers.length} usuarios importados exitosamente. ${skippedCount} omitidos (duplicados)`,
+        { id: toastId, duration: 5000 }
+      );
+
       setShowExcelImport(false);
       setExcelData([]);
     } catch (error) {
-      toast.error('Error al importar usuarios desde Excel');
+      console.error('Error al importar usuarios:', error);
+      toast.error('Error al importar usuarios desde Excel', { id: toastId });
+    } finally {
+      setIsProcessingExcel(false);
     }
   }, [excelData, users, addUser]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   return (
     <AnimatePresence>
@@ -915,11 +976,20 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
                       </button>
                       <button
                         onClick={processExcelImport}
-                        disabled={excelData.filter(eu => !users.some(u => (u as any).usuarioWindows === eu.usuario_windows)).length === 0}
+                        disabled={isProcessingExcel || excelData.filter(eu => !users.some(u => (u as any).usuarioWindows === eu.usuario_windows)).length === 0}
                         className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                       >
-                        <Upload size={16} />
-                        Importar Usuarios
+                        {isProcessingExcel ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Importando...
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={16} />
+                            Importar Usuarios
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

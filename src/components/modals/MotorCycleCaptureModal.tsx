@@ -19,73 +19,75 @@ export default function MotorCycleCaptureModal({ printer, isOpen, onClose }: Mot
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!motorCycle.trim()) {
       toast.error('El ciclo de motor es obligatorio');
+      return;
+    }
+
+    const motorCycleValue = parseInt(motorCycle);
+    if (isNaN(motorCycleValue) || motorCycleValue < 0) {
+      toast.error('El ciclo de motor debe ser un número válido');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Buscar el cambio pendiente de esta impresora
-      const pendingChange = changes.find(change => 
-        change.printerId === printer.id && 
+      const pendingChange = changes.find(change =>
+        change.printerId === printer.id &&
         change.motorCyclePending === true
       );
 
       if (pendingChange) {
-        // Actualizar el cambio existente en lugar de crear uno nuevo
         const updatedChange = {
           ...pendingChange,
-          motorCycle: parseInt(motorCycle),
+          motorCycle: motorCycleValue,
           motorCyclePending: false,
-          changeDate: new Date() // Actualizar la fecha de cambio al momento de capturar el ciclo
+          updatedAt: new Date()
         };
 
-        // Actualizar el registro existente en lugar de crear uno nuevo
-        updateChange(pendingChange.id, updatedChange);
         await supabaseService.update('changes', updatedChange);
+        updateChange(pendingChange.id, updatedChange);
       }
 
-      // Actualizar la impresora
       const updatedPrinter: Printer = {
         ...printer,
-        motorCycle: parseInt(motorCycle),
-        currentTonerLevel: 100, // Actualizar a 100% al capturar el ciclo
+        motorCycle: motorCycleValue,
+        currentTonerLevel: 100,
         hasBackupToner: false,
         motorCyclePending: false,
         updatedAt: new Date()
       };
 
-      updatePrinter(printer.id, updatedPrinter);
       await supabaseService.update('printers', updatedPrinter);
+      updatePrinter(printer.id, updatedPrinter);
 
-      // Actualizar el estado del toner vacío relacionado
-      const relatedEmptyToner = emptyToners.find(empty => 
-        empty.printerLocation === printer.location && 
+      const relatedEmptyToner = emptyToners.find(empty =>
+        empty.printerLocation === printer.location &&
         empty.status === 'pending_cycle' &&
-        empty.isBackup === true &&
-        empty.category === 'area'
+        empty.isBackup === true
       );
 
       if (relatedEmptyToner) {
         const updatedEmptyToner = {
           ...relatedEmptyToner,
-          category: 'area' as const, // Mantener en área después de capturar ciclo
-          status: 'ready_pickup' as const, // Cambiar estado a listo para recoger
-          motorCycleCaptured: true
+          category: 'area' as const,
+          status: 'ready_pickup' as const,
+          motorCycleCaptured: true,
+          updatedAt: new Date()
         };
-        
-        updateEmptyToner(relatedEmptyToner.id, updatedEmptyToner);
+
         await supabaseService.update('emptyToners', updatedEmptyToner);
+        updateEmptyToner(relatedEmptyToner.id, updatedEmptyToner);
       }
+
       toast.success('Ciclo de motor capturado exitosamente');
-      
+      setMotorCycle('');
       onClose();
     } catch (error) {
-      toast.error('Error al capturar el ciclo de motor');
-      console.error('Error:', error);
+      console.error('Error al capturar el ciclo de motor:', error);
+      toast.error(`Error al capturar el ciclo de motor: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setIsSubmitting(false);
     }
