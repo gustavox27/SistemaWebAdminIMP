@@ -44,9 +44,9 @@ export default function EditInventoryModal({ item, isOpen, onClose }: EditInvent
         updatedAt: new Date()
       };
 
-      updateInventory(updatedItem);
       await supabaseService.update('inventory', updatedItem);
-      
+      updateInventory(item.id, updatedItem);
+
       toast.success('Item actualizado exitosamente');
       onClose();
     } catch (error) {

@@ -37,14 +37,14 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-// Componente virtualizado para renderizar solo usuarios visibles
-const VirtualizedUserList = React.memo(({ 
-  users, 
-  onEdit, 
-  onDelete, 
-  onSetDefault, 
-  onSelect, 
-  defaultUser 
+// Componente simple sin virtualización para evitar errores de DOM
+const UserList = React.memo(({
+  users,
+  onEdit,
+  onDelete,
+  onSetDefault,
+  onSelect,
+  defaultUser
 }: {
   users: UserType[];
   onEdit: (user: UserType) => void;
@@ -53,56 +53,19 @@ const VirtualizedUserList = React.memo(({
   onSelect?: (user: UserType) => void;
   defaultUser: string;
 }) => {
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const ITEM_HEIGHT = 140; // Altura aproximada de cada tarjeta de usuario
-  const BUFFER_SIZE = 10; // Elementos extra para renderizar fuera de la vista
-
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const scrollTop = containerRef.current.scrollTop;
-    const containerHeight = containerRef.current.clientHeight;
-    
-    const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER_SIZE);
-    const end = Math.min(users.length, Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + BUFFER_SIZE);
-    
-    setVisibleRange({ start, end });
-  }, [users.length]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.addEventListener('scroll', handleScroll);
-    handleScroll(); // Calcular rango inicial
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, [handleScroll]);
-
-  const visibleUsers = users.slice(visibleRange.start, visibleRange.end);
-  const totalHeight = users.length * ITEM_HEIGHT;
-  const offsetY = visibleRange.start * ITEM_HEIGHT;
-
   return (
-    <div 
-      ref={containerRef}
-      className="h-96 overflow-y-auto"
-      style={{ scrollBehavior: 'smooth' }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {visibleUsers.map((user, index) => (
-              <div
-                key={user.id}
-                className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow ${
-                  onSelect ? 'cursor-pointer hover:bg-blue-50 hover:border-blue-300' : ''
-                }`}
-                style={{ height: ITEM_HEIGHT - 16 }} // Ajustar por gap
-                onDoubleClick={() => onSelect ? onSelect(user) : undefined}
+    <div className="h-96 overflow-y-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {users.map((user) => (
+          <motion.div
+            key={user.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow ${
+              onSelect ? 'cursor-pointer hover:bg-blue-50 hover:border-blue-300' : ''
+            }`}
+            onDoubleClick={() => onSelect ? onSelect(user) : undefined}
               >
                 <div className="flex justify-between items-start h-full">
                   <div className="flex-1 min-w-0">
@@ -177,10 +140,8 @@ const VirtualizedUserList = React.memo(({
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
@@ -833,10 +794,10 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
                     </div>
                   )}
 
-                  {/* Virtualized Users List */}
+                  {/* Users List */}
                   {filteredUsers.length > 0 ? (
                     <div className="flex-1 min-h-0">
-                      <VirtualizedUserList
+                      <UserList
                         users={filteredUsers}
                         onEdit={handleEdit}
                         onDelete={handleDelete}

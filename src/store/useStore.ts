@@ -183,7 +183,7 @@ export const useStore = create<AppState>((set) => ({
   setInventory: (inventory) => set({ inventory }),
   addInventory: (item) => set((state) => ({ inventory: [...state.inventory, item] })),
   updateInventory: (id, item) => set((state) => ({
-    inventory: state.inventory.map(i => i.id === id ? { ...i, ...item } : i)
+    inventory: state.inventory.map(i => i.id === id ? { ...i, ...item, updatedAt: new Date() } : i)
   })),
   deleteInventory: (id) => set((state) => ({
     inventory: state.inventory.filter(i => i.id !== id)
