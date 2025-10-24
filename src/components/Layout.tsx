@@ -246,6 +246,7 @@ export default function Layout({ children, activeTab, onTabChange }: LayoutProps
     { id: 'empty-toners', label: 'Devolución', icon: Trash2 },
     { id: 'tickets', label: 'Tickets', icon: Ticket },
     { id: 'daily-report', label: 'Reporte (D)', icon: FileText },
+    { id: 'reports', label: 'Reporte (G)', icon: FileText },
     { id: 'configuration', label: 'Configuración', icon: Settings }
   ];
 
@@ -498,17 +499,17 @@ export default function Layout({ children, activeTab, onTabChange }: LayoutProps
       }`}>
         {/* Top bar */}
         <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-6">
             <button
-              className="lg:hidden text-gray-500 hover:text-gray-700 transition-colors"
+              className="lg:hidden text-gray-500 hover:text-gray-700 transition-colors p-2 touch-target"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={24} />
             </button>
-            
-            <div className="flex-1 lg:flex-none">
-              <h2 className="text-xl font-semibold text-gray-900 capitalize">
-                {activeTab === 'dashboard' ? 'Panel de Control' : 
+
+            <div className="flex-1 lg:flex-none px-2 sm:px-0">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 capitalize truncate">
+                {activeTab === 'dashboard' ? 'Panel de Control' :
                  activeTab === 'printers' ? 'Gestión de Impresoras' :
                  activeTab === 'inventory' ? 'Inventario de Toner' :
                  activeTab === 'orders' ? 'Pedidos de Toner' :
@@ -516,25 +517,26 @@ export default function Layout({ children, activeTab, onTabChange }: LayoutProps
                 activeTab === 'empty-toners' ? 'Devolución de Suministros' :
                 activeTab === 'tickets' ? 'Gestión de Tickets de Soporte' :
                 activeTab === 'daily-report' ? 'Reporte Diario de Impresoras' :
+                activeTab === 'reports' ? 'Reportes Generales' :
                 activeTab === 'configuration' ? 'Configuración del Sistema' : activeTab}
               </h2>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {(criticalCount > 0 || criticalFuserCount > 0 || emptyTonersWarning) && (
                 <button
                   onClick={() => setShowNotifications(true)}
-                  className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors touch-target"
                   title="Ver notificaciones"
                 >
                   <Bell className={`${criticalCount > 0 || criticalFuserCount > 0 ? 'text-red-500' : 'text-yellow-500'} animate-pulse`} size={20} />
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {criticalCount + criticalFuserCount + (emptyTonersWarning ? 1 : 0)}
                   </span>
                 </button>
               )}
-              
-              <div className="text-sm text-gray-500">
+
+              <div className="text-xs sm:text-sm text-gray-500 hidden md:block">
                 {new Date().toLocaleDateString('es-ES', {
                   weekday: 'long',
                   year: 'numeric',
@@ -542,12 +544,18 @@ export default function Layout({ children, activeTab, onTabChange }: LayoutProps
                   day: 'numeric'
                 })}
               </div>
+              <div className="text-xs text-gray-500 md:hidden">
+                {new Date().toLocaleDateString('es-ES', {
+                  day: 'numeric',
+                  month: 'short'
+                })}
+              </div>
             </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 sm:p-4 md:p-6">
           <div className="max-w-full">
             <motion.div
               key={activeTab}

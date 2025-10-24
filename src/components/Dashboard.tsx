@@ -360,26 +360,26 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-lg p-6 border border-gray-100"
+        className="bg-white rounded-xl shadow-lg p-4 md:p-6 border border-gray-100"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex items-center space-x-3">
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Filter className="h-6 w-6 text-blue-600" />
+            <div className="bg-blue-100 p-2 md:p-3 rounded-lg">
+              <Filter className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Monitoreo por Sede</h2>
-              <p className="text-gray-600">Filtra el dashboard por sede específica</p>
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">Monitoreo por Sede</h2>
+              <p className="text-sm md:text-base text-gray-600 hidden sm:block">Filtra el dashboard por sede específica</p>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <label className="text-sm font-medium text-gray-700">Sede:</label>
-            <div className="relative">
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+            <label className="text-sm font-medium text-gray-700 sm:inline-block">Sede:</label>
+            <div className="relative flex-1 sm:flex-none">
               <select
                 value={selectedSede}
                 onChange={(e) => setSelectedSede(e.target.value)}
-                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium min-w-48"
+                className="w-full sm:w-auto appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium sm:min-w-48"
               >
                 <option value="all">Todas las Sedes</option>
                 {availableSedes.map((sede) => (
@@ -391,7 +391,7 @@ export default function Dashboard() {
               <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
             {selectedSede !== 'all' && (
-              <div className="bg-blue-50 px-3 py-1 rounded-full">
+              <div className="bg-blue-50 px-3 py-1 rounded-full text-center sm:text-left">
                 <span className="text-sm font-medium text-blue-800">
                   {filteredPrinters.length} impresoras
                 </span>
@@ -402,21 +402,21 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+          className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm font-medium uppercase tracking-wide">Total Impresoras</p>
-              <p className="text-4xl font-bold mt-2">{metrics.totalPrinters}</p>
-              <p className="text-blue-200 text-xs mt-1">Registradas en el sistema</p>
+              <p className="text-blue-100 text-xs md:text-sm font-medium uppercase tracking-wide">Total Impresoras</p>
+              <p className="text-3xl md:text-4xl font-bold mt-1 md:mt-2">{metrics.totalPrinters}</p>
+              <p className="text-blue-200 text-xs mt-1 hidden sm:block">Registradas en el sistema</p>
             </div>
-            <div className="bg-white bg-opacity-20 p-3 rounded-lg">
-              <Printer className="h-8 w-8 text-blue-200" />
+            <div className="bg-white bg-opacity-20 p-2 md:p-3 rounded-lg">
+              <Printer className="h-6 w-6 md:h-8 md:w-8 text-blue-200" />
             </div>
           </div>
         </motion.div>

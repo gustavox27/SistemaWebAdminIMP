@@ -13,6 +13,7 @@ interface UserManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect?: (user: UserType) => void;
+  onUserSelect?: (userName: string) => void;
 }
 
 interface ExcelUser {
@@ -46,6 +47,7 @@ const UserCard = React.memo(({
   onDelete,
   onSetDefault,
   onSelect,
+  onUserSelect,
   defaultUser,
   isSelectable
 }: {
@@ -54,6 +56,7 @@ const UserCard = React.memo(({
   onDelete: (user: UserType) => void;
   onSetDefault: (userName: string) => void;
   onSelect?: (user: UserType) => void;
+  onUserSelect?: (userName: string) => void;
   defaultUser: string;
   isSelectable: boolean;
 }) => {
@@ -64,81 +67,87 @@ const UserCard = React.memo(({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow ${
+      className={`bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow ${
         isSelectable ? 'cursor-pointer hover:bg-blue-50 hover:border-blue-300' : ''
       }`}
-      onDoubleClick={() => onSelect ? onSelect(user) : undefined}
+      onDoubleClick={() => {
+        if (onUserSelect) {
+          onUserSelect(user.name);
+        } else if (onSelect) {
+          onSelect(user);
+        }
+      }}
     >
       <div className="flex justify-between items-start h-full">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 rounded-lg flex-shrink-0">
-              <User size={16} className="text-white" />
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-1.5 rounded-lg flex-shrink-0">
+              <User size={12} className="text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="font-bold text-gray-900 text-lg truncate">{user.name}</h4>
-              <p className="text-sm text-blue-600 font-medium truncate">{user.position}</p>
+              <h4 className="font-bold text-gray-900 text-sm truncate">{user.name}</h4>
+              <p className="text-xs text-blue-600 font-medium truncate">{user.position}</p>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {(user as any).empresa && (
-              <div className="flex items-center text-sm text-gray-600">
-                <Building size={14} className="mr-2 text-gray-400 flex-shrink-0" />
+              <div className="flex items-center text-xs text-gray-600">
+                <Building size={11} className="mr-1.5 text-gray-400 flex-shrink-0" />
                 <span className="truncate">{(user as any).empresa}</span>
               </div>
             )}
             {(user as any).usuarioWindows && (
-              <div className="flex items-center text-sm text-gray-600">
-                <Monitor size={14} className="mr-2 text-gray-400 flex-shrink-0" />
-                <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs truncate">
+              <div className="flex items-center text-xs text-gray-600">
+                <Monitor size={11} className="mr-1.5 text-gray-400 flex-shrink-0" />
+                <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-xs truncate">
                   {(user as any).usuarioWindows}
                 </span>
               </div>
             )}
             {user.contact && (
-              <div className="flex items-center text-sm text-gray-600">
-                <span className="w-3.5 h-3.5 mr-2 bg-green-500 rounded-full flex-shrink-0"></span>
+              <div className="flex items-center text-xs text-gray-600">
+                <span className="w-2.5 h-2.5 mr-1.5 bg-green-500 rounded-full flex-shrink-0"></span>
                 <span className="truncate">{user.contact}</span>
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col space-y-2 ml-4 flex-shrink-0">
+        <div className="flex flex-col space-y-1.5 ml-2 flex-shrink-0">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onEdit(user);
             }}
-            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
             title="Editar usuario"
           >
-            <Edit size={16} />
+            <Edit size={13} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onSetDefault(user.name);
             }}
-            className={`p-2 transition-colors rounded-lg ${
+            className={`p-1.5 transition-colors rounded-lg ${
               defaultUser === user.name
                 ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50'
                 : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
             }`}
             title="Establecer como predeterminado"
           >
-            <Star size={16} fill={defaultUser === user.name ? 'currentColor' : 'none'} />
+            <Star size={13} fill={defaultUser === user.name ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(user);
             }}
-            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
             title="Eliminar usuario"
           >
-            <Trash2 size={16} />
+            <Trash2 size={13} />
           </button>
         </div>
       </div>
@@ -148,7 +157,7 @@ const UserCard = React.memo(({
 
 UserCard.displayName = 'UserCard';
 
-export default function UserManagementModal({ isOpen, onClose, onSelect }: UserManagementModalProps) {
+export default function UserManagementModal({ isOpen, onClose, onSelect, onUserSelect }: UserManagementModalProps) {
   const { users, addUser, updateUser, deleteUser, defaultUser, setDefaultUser, setUsers } = useStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showExcelImport, setShowExcelImport] = useState(false);
@@ -650,7 +659,7 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-y-auto min-h-0">
             <div className="p-6 h-full flex flex-col">
               <AnimatePresence>
                 {showAddForm && (
@@ -805,7 +814,7 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
                 ) : paginatedUsers.length > 0 ? (
                   <>
                     <div className="flex-1 overflow-y-auto min-h-0 mb-4">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                         <AnimatePresence mode="popLayout">
                           {paginatedUsers.map((user) => (
                             <UserCard
@@ -815,8 +824,9 @@ export default function UserManagementModal({ isOpen, onClose, onSelect }: UserM
                               onDelete={handleDelete}
                               onSetDefault={handleSetDefault}
                               onSelect={onSelect ? handleUserSelect : undefined}
+                              onUserSelect={onUserSelect}
                               defaultUser={defaultUser}
-                              isSelectable={!!onSelect}
+                              isSelectable={!!onSelect || !!onUserSelect}
                             />
                           ))}
                         </AnimatePresence>

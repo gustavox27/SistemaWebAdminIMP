@@ -26,6 +26,7 @@ export interface ExportData {
   };
   userPreferences: {
     dailyReportPrinters: any[];
+    dailyReportData: any[];
     defaultPrintersTab: string | null;
     copiedTickets: string[];
   };
@@ -92,11 +93,13 @@ class DataExportService {
       // Obtener datos de localStorage (preferencias de usuario)
       console.log('💾 Obteniendo preferencias de usuario desde localStorage...');
       const dailyReportPrinters = this.getLocalStorageData('dailyReportPrinters', []);
+      const dailyReportData = dailyReportPrinters;
       const defaultPrintersTab = this.getLocalStorageData('defaultPrintersTab', null);
       const copiedTickets = this.getLocalStorageData('copiedTickets', []);
 
       console.log('✅ Preferencias de usuario obtenidas:', {
         dailyReportPrinters: dailyReportPrinters.length,
+        dailyReportData: dailyReportData.length,
         defaultPrintersTab: defaultPrintersTab || 'ninguna',
         copiedTickets: copiedTickets.length
       });
@@ -119,12 +122,13 @@ class DataExportService {
 
       const userPreferences = {
         dailyReportPrinters,
+        dailyReportData,
         defaultPrintersTab,
         copiedTickets
       };
 
       const totalRecords = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
-      const totalPreferences = dailyReportPrinters.length + copiedTickets.length + (defaultPrintersTab ? 1 : 0);
+      const totalPreferences = dailyReportPrinters.length + dailyReportData.length + copiedTickets.length + (defaultPrintersTab ? 1 : 0);
 
       console.log('📊 Total de registros:', totalRecords);
       console.log('📊 Total de preferencias:', totalPreferences);

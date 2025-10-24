@@ -200,9 +200,15 @@ class DataMigrationService {
     if (!migratedData.userPreferences) {
       migratedData.userPreferences = {
         dailyReportPrinters: [],
+        dailyReportData: [],
         defaultPrintersTab: null,
         copiedTickets: []
       };
+    }
+
+    // Asegurar que dailyReportData existe
+    if (!migratedData.userPreferences.dailyReportData) {
+      migratedData.userPreferences.dailyReportData = migratedData.userPreferences.dailyReportPrinters || [];
     }
 
     // Migrar impresoras: agregar campos nuevos de v2.0
@@ -276,9 +282,15 @@ class DataMigrationService {
     if (!migratedData.userPreferences) {
       migratedData.userPreferences = {
         dailyReportPrinters: [],
+        dailyReportData: [],
         defaultPrintersTab: null,
         copiedTickets: []
       };
+    }
+
+    // Asegurar que dailyReportData existe
+    if (!migratedData.userPreferences.dailyReportData) {
+      migratedData.userPreferences.dailyReportData = migratedData.userPreferences.dailyReportPrinters || [];
     }
 
     // Aplicar cambios específicos de v1.1 a v2.0
@@ -300,9 +312,15 @@ class DataMigrationService {
     if (!migratedData.userPreferences) {
       migratedData.userPreferences = {
         dailyReportPrinters: [],
+        dailyReportData: [],
         defaultPrintersTab: null,
         copiedTickets: []
       };
+    }
+
+    // Asegurar que dailyReportData existe
+    if (!migratedData.userPreferences.dailyReportData) {
+      migratedData.userPreferences.dailyReportData = migratedData.userPreferences.dailyReportPrinters || [];
     }
 
     // Cambios mínimos ya que v1.2 es muy similar a v2.0
@@ -444,10 +462,11 @@ class DataMigrationService {
         console.log('⚙️ Restaurando preferencias de usuario...');
 
         // Restaurar impresoras del reporte diario
-        if (data.userPreferences.dailyReportPrinters && data.userPreferences.dailyReportPrinters.length > 0) {
-          localStorage.setItem('dailyReportPrinters', JSON.stringify(data.userPreferences.dailyReportPrinters));
-          console.log(`  ✅ ${data.userPreferences.dailyReportPrinters.length} impresoras del reporte diario restauradas`);
-          warnings.push(`${data.userPreferences.dailyReportPrinters.length} impresoras restauradas en el Reporte Diario`);
+        const reportDataToRestore = data.userPreferences.dailyReportData || data.userPreferences.dailyReportPrinters;
+        if (reportDataToRestore && reportDataToRestore.length > 0) {
+          localStorage.setItem('dailyReportPrinters', JSON.stringify(reportDataToRestore));
+          console.log(`  ✅ ${reportDataToRestore.length} impresoras del reporte diario restauradas`);
+          warnings.push(`${reportDataToRestore.length} impresoras restauradas en el Reporte Diario`);
         }
 
         // Restaurar pestaña predeterminada

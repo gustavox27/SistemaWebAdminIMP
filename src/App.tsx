@@ -9,6 +9,7 @@ import EmptyTonersTable from './components/EmptyTonersTable';
 import TicketsContainer from './components/TicketsContainer';
 import ConfigurationContainer from './components/ConfigurationContainer';
 import DailyReportContainer from './components/DailyReportContainer';
+import ReportsContainer from './components/ReportsContainer';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -33,6 +34,8 @@ function App() {
         return <ConfigurationContainer />;
       case 'daily-report':
         return <DailyReportContainer />;
+      case 'reports':
+        return <ReportsContainer />;
       default:
         return <Dashboard />;
     }
