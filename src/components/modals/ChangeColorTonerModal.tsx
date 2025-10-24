@@ -470,10 +470,6 @@ export default function ChangeColorTonerModal({ printer, isOpen, onClose }: Chan
                 setSelectedUser(user.name);
                 setShowUserModal(false);
               }}
-              onSelect={(user) => {
-                setSelectedUser(user.name);
-                setShowUserModal(false);
-              }}
             />
           )}
 
@@ -482,10 +478,6 @@ export default function ChangeColorTonerModal({ printer, isOpen, onClose }: Chan
             <OperatorManagementModal
               isOpen={showOperatorModal}
               onClose={() => setShowOperatorModal(false)}
-              onSelect={(operator) => {
-                setSelectedOperator(operator.name);
-                setShowOperatorModal(false);
-              }}
               onSelect={(operator) => {
                 setSelectedOperator(operator.name);
                 setShowOperatorModal(false);
